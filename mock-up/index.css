@@ -39,9 +39,6 @@ h2 {
 
 }
 
-
-
-
 .img-bd{
     border: 10px solid blue;
     height: 7cm;
@@ -55,6 +52,7 @@ h2 {
 
 
 }
+
 /* footer styling */
 small {
     color: aliceblue;
