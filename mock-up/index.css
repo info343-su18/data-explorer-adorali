@@ -32,7 +32,6 @@ h2 {
 .card {
     margin-top: 15px;
     margin-bottom: 15px;
-    border: 10px solid darkgoldenrod;
 
 }
 
@@ -44,14 +43,12 @@ h2 {
 }
 
 .card-body{
-    border: 10px solid purple;
     width: 100%;
 
 
 }
 
 .image-body{
-    border: 10px solid blue;
     height: 25vh;
 
 
