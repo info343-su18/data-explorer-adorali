@@ -12,12 +12,12 @@ nav {
     border-radius: 5px;
 }
 
-nav a {
+a {
     color: white;
 }
 
-nav a:focus, nav a:hover {
-    color: white;
+a:focus, a:hover {
+    color: aliceblue;
     text-decoration: none;
 }
 
