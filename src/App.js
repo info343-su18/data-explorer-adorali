@@ -4,7 +4,7 @@ import 'whatwg-fetch';
 import moment from 'moment';
 import Image from './img/vp-video-editing.jpg'
 import {Pagination, PaginationItem, PaginationLink} from 'reactstrap';
-import { Button, Modal, ModalHeader, ModalBody, ModalFooter } from 'reactstrap';
+import {Button, Modal, ModalHeader, ModalBody, ModalFooter} from 'reactstrap';
 
 
 //Sample JSON
@@ -22,7 +22,7 @@ class App extends Component {
     constructor(props) {
         super(props);
 
-        this.state = {page: 0, json: [], date: moment(), value: ""}
+        this.state = {page: 0, json: [], date: moment(), value: "", selectedCard: undefined,}
     }
 
 
@@ -57,13 +57,25 @@ class App extends Component {
 
     }
 
+    cardSelection(selectedCard) {
+        this.setState({selectedCard: selectedCard});
+    }
+
+    toggleCardSelection() {
+        this.setState({selectedCard: undefined});
+    }
+
     render() {
         console.log(this.state.page);
+        console.log(this.state.selectedCard);
         return (
             <div>
                 <SearchBar value={this.state.value}/>
-                <CardList cards={this.state.json}/>
+                <CardList cards={this.state.json} selectedCallback={(card) => this.cardSelection(card)}/>
                 <PagesSelector/>
+                <PopUp card={this.state.selectedCard} toggleCallback={() => {
+                    this.toggleCardSelection()
+                }}/>
             </div>
         );
     }
@@ -115,6 +127,24 @@ class PagesSelector extends Component {
 class Card extends Component {
     render() {
 
+        if (this.props.card.media_type === 'video') {
+            return (<div className="card">
+                <figure>
+                    <a target="_blank" href={this.props.card.url}><img src={Image} alt={this.props.card.title}/> </a>
+                    <figcaption>{this.props.card.title}</figcaption>
+                </figure>
+            </div>);
+        } else {
+            return (<div className="card" onClick={() => {
+                this.props.selectedCallback(this.props.card)
+            }}>
+                <figure>
+                    <img src={this.props.card.url} alt={this.props.card.title}/>
+                    <figcaption>{this.props.card.title}</figcaption>
+                </figure>
+            </div>);
+
+        }
         return (<div className="card">
             <figure>{this.props.card.media_type === 'video' ?
                 <a target="_blank" href={this.props.card.url}><img src={Image} alt={this.props.card.title}/> </a> :
@@ -129,43 +159,49 @@ class Card extends Component {
 class CardList extends Component {
     render() {
         let listOfCards = this.props.cards.map((card) => {
-                return <Card key={card.date} card={card}/>
+                return <Card key={card.date} card={card} selectedCallback={this.props.selectedCallback}/>
             }
         );
         return (<section className="spread">{listOfCards}</section>)
     }
 }
 
+
+// props(card: the card, callback function: to toggle the state of App to make sure it becomes undefined once you close the modal)
 class PopUp extends Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            modal: false
-        };
-
-        this.toggle = this.toggle.bind(this);
-    }
-
-    toggle() {
-        this.setState({
-            modal: !this.state.modal
-        });
-    }
 
     render() {
+
+        // If the card is undefined return nothing
+        if (this.props.card === undefined) {
+            return <div></div>;
+        }
+
+        // else create the modal
         return (
-            <div>
-                <Button color="danger" onClick={this.toggle}>{this.props.buttonLabel}</Button>
-                <Modal isOpen={this.state.modal} toggle={this.toggle} className={this.props.className}>
-                    <ModalHeader toggle={this.toggle}>Modal title</ModalHeader>
+            <div>{
+                <Modal isOpen={this.props.card !== undefined} toggle={() => {
+                    this.props.toggleCallback()
+                }} className={"Chocho"}>
+                    {/*Header*/}
+                    <ModalHeader toggle={() => {
+                        this.props.toggleCallback()
+                    }}>{this.props.card.title}</ModalHeader>
+
+                    {/*Body, here it goes the image and the descriptions*/}
                     <ModalBody>
-                        Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+                        <figure>
+                            <img src={this.props.card.url}/>
+                            {this.props.card.copyright && <figcaption>{this.props.card.copyright}</figcaption>}
+                        </figure>
+                        <p>{this.props.card.explanation}</p>
                     </ModalBody>
                     <ModalFooter>
-                        <Button color="primary" onClick={this.toggle}>Do Something</Button>{' '}
-                        <Button color="secondary" onClick={this.toggle}>Cancel</Button>
+                        <Button color="secondary" onClick={() => {
+                            this.props.toggleCallback()
+                        }}>Cancel</Button>
                     </ModalFooter>
-                </Modal>
+                </Modal>}
             </div>
         );
     }
