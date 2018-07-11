@@ -6,7 +6,7 @@ body {
   background: url('img/space.jpg') repeat;
 }
 
-/*!* btn styling *!*/
+/* btn styling */
 
 .btn {
   float: right;
@@ -25,7 +25,7 @@ a:focus, a:hover {
   align-items: center;
 }
 
-/*!* card styling *!*/
+/* card styling */
 
 .card {
   margin: 15px;
@@ -54,3 +54,5 @@ small {
 }
 
 /* search styling */
+
+/* Pagination styling */
