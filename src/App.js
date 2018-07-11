@@ -44,12 +44,6 @@ class App extends Component {
             currentDate.subtract(1, 'days');
         }
 
-        // fuck this shit
-        let error = fetch(URL + '1990-09-09').then((response) => response.json()).then((data) => {
-            console.log(data)
-        }).catch((err) => {
-            alert(err.message)
-        });
 
         // set the pictures in our state to be the json object for each date
         Promise.all(dates.map((date) => {
@@ -60,6 +54,10 @@ class App extends Component {
                     alert(err.message)
                 })
         })).then((jsonArr) => {
+
+            //Test code TODO
+            console.log(jsonArr);
+
             this.setState({json: jsonArr});
         })
 
@@ -179,9 +177,11 @@ class PagesSelector extends Component {
 class Card extends Component {
     render() {
         if (this.props.card.media_type === 'video') {
-            return (<div className="card">
+            return (<div className="card" onClick={() => {
+                this.props.selectedCallback(this.props.card)
+            }}>
                 <figure>
-                    <a target="_blank" href={this.props.card.url}><img src={Image} alt={this.props.card.title}/> </a>
+                    <img src={Image} alt={this.props.card.title}/>
                     <figcaption>{this.props.card.title}</figcaption>
                 </figure>
             </div>);
@@ -196,6 +196,7 @@ class Card extends Component {
             </div>);
 
         }
+
     }
 }
 
@@ -233,11 +234,18 @@ class PopUp extends Component {
                     }}>{this.props.card.title}</ModalHeader>
 
                     {/*Body, here it goes the image and the descriptions*/}
-                    <ModalBody>
+                    <ModalBody>{this.props.card.media_type === 'video'?
+                        <figure>
+                            <iframe width="420" height="315"
+                                    src={this.props.card.url}>
+                            </iframe>
+                            {this.props.card.copyright && <figcaption>{this.props.card.copyright}</figcaption>}
+                        </figure>
+                        :
                         <figure>
                             <img src={this.props.card.url}/>
                             {this.props.card.copyright && <figcaption>{this.props.card.copyright}</figcaption>}
-                        </figure>
+                        </figure>}
                         <p>{this.props.card.explanation}</p>
                     </ModalBody>
                     <ModalFooter>
