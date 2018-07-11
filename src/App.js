@@ -30,15 +30,9 @@ class App extends Component {
                       selectedCard: undefined, // selected picture (selected by click or query)
                       json: [], // array of picture objects
                       date: moment(), // current date
-                      value: ""}; // data entered by the user in the input box
+                      }; 
 
     }
-    
-    // sets the value according to input from the search bar
-    handleChange(event) {
-      event.preventDefault();
-      this.setState({value: event.target.value});
-    } 
 
     componentDidMount() {
         let currentDate = moment(this.state.date);
@@ -82,7 +76,7 @@ class App extends Component {
     render() {
         return (
             <div>
-                <SearchBar value={this.state.value} selectedCallback={(card) => this.cardSelection(card)} handleChange={(event) => this.handleChange(event)}/>
+                <SearchBar selectedCallback={(card) => this.cardSelection(card)} />
                 <CardList cards={this.state.json} selectedCallback={(card) => this.cardSelection(card)}/>
 
                 <PagesSelector/>
@@ -101,11 +95,23 @@ export default App;
 //        value- user input
 //        selectedCallback()- performs selection (pops up in a modal)
 class SearchBar extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {value: ""};
+  }
+
+  // keeps track of the user input
+  handleChange(event) {
+    event.preventDefault();
+    this.setState({value: event.target.value});
+  } 
+
+  // requests the user's picture
   handleQuery(event) {
     event.preventDefault();
 
     // find selection
-    let result = fetch(URL + this.props.value)
+    let result = fetch(URL + this.state.value)
     .then((response) => {
         return response.json();
     }).catch((err) => {
@@ -120,11 +126,11 @@ class SearchBar extends Component {
     return <form className="form-inline"
                   onSubmit={(event) => this.handleQuery(event)}>
             <input type="text"
-                    value={this.props.value} 
+                    value={this.state.value} 
                     placeholder="YYYY-MM-DD"
                     className="form-control" 
-                    onChange={(event) => this.props.handleChange(event)} />
-        <Button color="primary" onClick={(event) => this.handleQuery(event)}>Search!</Button>
+                    onChange={(event) => this.handleChange(event)} />
+        <Button color="light" onClick={(event) => this.handleQuery(event)}>Search!</Button>
     </form>;
   }
 }
