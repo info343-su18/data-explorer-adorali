@@ -37,7 +37,7 @@ class App extends Component {
     // sets the value according to input from the search bar
     handleChange(event) {
       event.preventDefault();
-      this.setState({value: event.target.input});
+      this.setState({value: event.target.value});
     } 
 
     componentDidMount() {
@@ -49,7 +49,6 @@ class App extends Component {
             dates.push(currentDate.year() + "-" + currentDate.month() + "-" + currentDate.date());
             currentDate.subtract(1, 'days');
         }
-        console.log(dates);
 
         // fuck this shit
         let error = fetch(URL + '1990-09-09').then((response) => response.json()).then((data) => {
@@ -67,7 +66,6 @@ class App extends Component {
                     alert(err.message)
                 })
         })).then((jsonArr) => {
-            console.log(jsonArr);
             this.setState({json: jsonArr});
         })
 
@@ -103,24 +101,30 @@ export default App;
 //        value- user input
 //        selectedCallback()- performs selection (pops up in a modal)
 class SearchBar extends Component {
+  handleQuery(event) {
+    event.preventDefault();
+
+    // find selection
+    let result = fetch(URL + this.props.value)
+    .then((response) => {
+        return response.json();
+    }).catch((err) => {
+        alert(err.message);
+    })
+
+    // present it
+    return result.then((response) => this.props.selectedCallback(response));
+  }
+
   render() {
-    return <form className="form-inline">
-            <input value={this.props.value} 
+    return <form className="form-inline"
+                  onSubmit={(event) => this.handleQuery(event)}>
+            <input type="text"
+                    value={this.props.value} 
                     placeholder="YYYY-MM-DD"
                     className="form-control" 
                     onChange={(event) => this.props.handleChange(event)} />
-        <Button color="primary" onClick={() => {
-              // find selection
-              let result = fetch(URL + this.props.value)
-              .then((response) => {
-                console.log(this.props.value);
-                  return response.json()
-              }).catch((err) => {
-                  alert(err.message)
-              })
-              // present it
-              return this.props.selectedCallback(result);
-            }}>Search!</Button>
+        <Button color="primary" onClick={(event) => this.handleQuery(event)}>Search!</Button>
     </form>;
   }
 }
