@@ -4,7 +4,7 @@ import 'whatwg-fetch';
 import moment from 'moment';
 import Image from './img/vp-video-editing.jpg'
 import {Pagination, PaginationItem, PaginationLink} from 'reactstrap';
-import {Button, Modal, ModalHeader, ModalBody, ModalFooter} from 'reactstrap';
+import {Button, Modal, ModalHeader, ModalBody, ModalFooter, Alert} from 'reactstrap';
 
 
 //Sample JSON
@@ -74,26 +74,28 @@ class App extends Component {
     }
 
     render() {
-        return (
-            <div>
-                <SearchBar selectedCallback={(card) => this.cardSelection(card)} />
-                <CardList cards={this.state.json} selectedCallback={(card) => this.cardSelection(card)}/>
-
-                <PagesSelector/>
-                <PopUp card={this.state.selectedCard} toggleCallback={() => {
-                    this.toggleCardSelection()
-                }}/>
-            </div>
-        );
+      let error = "";
+      if (this.state.selectedCard && this.state.selectedCard.code) {
+        error = <BadRequestAlert message={this.state.selectedCard.msg}/>;
+      }
+      return (
+          <div>
+              <SearchBar selectedCallback={(card) => this.cardSelection(card)} />
+              {error}
+              <CardList cards={this.state.json} selectedCallback={(card) => this.cardSelection(card)}/>
+              <PagesSelector/>
+              <PopUp card={this.state.selectedCard} toggleCallback={() => {
+                  this.toggleCardSelection()
+              }}/>
+          </div>
+      );
     }
 }
 
 export default App;
 
 // user must type a valid date in the form YYYY-MM-DD
-// props: handleChange()- function to handle user typing
-//        value- user input
-//        selectedCallback()- performs selection (pops up in a modal)
+// props: selectedCallback()- performs selection (pops up in a modal)
 class SearchBar extends Component {
   constructor(props) {
     super(props);
@@ -113,13 +115,20 @@ class SearchBar extends Component {
     // find selection
     let result = fetch(URL + this.state.value)
     .then((response) => {
-        return response.json();
-    }).catch((err) => {
-        alert(err.message);
+      return response.json();
+    }).catch((error) => {
+      console.log("im handling");
+      //this.setState({err: error});
     })
 
     // present it
-    return result.then((response) => this.props.selectedCallback(response));
+    return result.then((response) => {
+      return this.props.selectedCallback(response);
+    }).catch((error) => {
+      console.log("im handling");
+
+      //this.setState({err: error});
+    });
   }
 
   render() {
@@ -132,6 +141,29 @@ class SearchBar extends Component {
                     onChange={(event) => this.handleChange(event)} />
         <Button color="light" onClick={(event) => this.handleQuery(event)}>Search!</Button>
     </form>;
+  }
+}
+
+// props: message - error message
+class BadRequestAlert extends React.Component {
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      visible: true
+    };
+  }
+
+  onDismiss() {
+    this.setState({ visible: false });
+  }
+
+  render() {
+    return (
+      <Alert color="danger" isOpen={this.state.visible} toggle={() => this.onDismiss()}>
+        {this.props.message}
+      </Alert>
+    );
   }
 }
 
@@ -185,7 +217,7 @@ class Card extends Component {
                     <figcaption>{this.props.card.title}</figcaption>
                 </figure>
             </div>);
-        } else {
+        } else if (this.props.card.media_type === 'image') {
             return (<div className="card" onClick={() => {
                 this.props.selectedCallback(this.props.card)
             }}>
@@ -206,7 +238,7 @@ class CardList extends Component {
                 return <Card key={card.date} card={card} selectedCallback={this.props.selectedCallback}/>
             }
         );
-        return (<section className="spread">{listOfCards}</section>)
+        return (<section className="spread">{listOfCards}</section>);
     }
 }
 
@@ -217,7 +249,7 @@ class PopUp extends Component {
     render() {
 
         // If the card is undefined return nothing
-        if (this.props.card === undefined) {
+        if (this.props.card === undefined || this.props.card.code) {
             return <div></div>;
         }
 

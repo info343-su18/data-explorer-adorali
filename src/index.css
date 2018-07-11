@@ -1,6 +1,7 @@
 *{
   box-sizing: border-box;
 }
+
 body {
   background: url('img/space.jpg') repeat;
 }
@@ -21,13 +22,13 @@ a:focus, a:hover {
 .spread {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-end;
+  align-items: center;
 }
 
 /*!* card styling *!*/
 
 .card {
-  margin: 3px;
+  margin: 15px;
   flex-basis: 24%;
 }
 
