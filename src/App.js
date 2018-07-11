@@ -18,33 +18,48 @@ import { Button, Modal, ModalHeader, ModalBody, ModalFooter } from 'reactstrap';
 //     "url": "https://www.youtube.com/embed/8i8-IuYoz24?rel=0"
 // }
 
+const IMAGES_PER_PAGE = 8;
+
+const URL = 'https://api.nasa.gov/planetary/apod?api_key=EzzKNCDQOcV3fJHd4ab0NQP551lX5ImTaqkZ037e&date=';
+
 class App extends Component {
     constructor(props) {
         super(props);
 
-        this.state = {page: 0, json: [], date: moment(), value: ""}
+        this.state = {page: 0, // current page
+                      selection: undefined, // selected picture (selected by click or query)
+                      json: [], // array of picture objects
+                      date: moment(), // current date
+                      value: ""}; // data entered by the user in the input box
     }
 
+    // sets the value according to input from the search bar
+    handleChange(event) {
+      event.preventDefault();
+      this.setState({value: event.target.input});
+    } 
 
     componentDidMount() {
         let currentDate = moment(this.state.date);
-        let arr = [];
-        for (let i = 0; i < 8; i++) {
+        let dates = [];
 
-            arr.push(currentDate.year() + "-" + currentDate.month() + "-" + currentDate.date());
+        // create an array of dates from current date to IMAGES_PER_PAGE days ago
+        for (let i = 0; i < IMAGES_PER_PAGE; i++) {
+            dates.push(currentDate.year() + "-" + currentDate.month() + "-" + currentDate.date());
             currentDate.subtract(1, 'days');
         }
-        console.log(arr);
+        console.log(dates);
 
-        let error = fetch('https://api.nasa.gov/planetary/apod?api_key=EzzKNCDQOcV3fJHd4ab0NQP551lX5ImTaqkZ037e&date=1990-09-09').then((response) => response.json()).then((data) => {
+        // fuck this shit
+        let error = fetch(URL + '1990-09-09').then((response) => response.json()).then((data) => {
             console.log(data)
         }).catch((err) => {
             alert(err.message)
         });
 
-
-        Promise.all(arr.map((date) => {
-            return fetch('https://api.nasa.gov/planetary/apod?api_key=EzzKNCDQOcV3fJHd4ab0NQP551lX5ImTaqkZ037e&date=' + date)
+        // set the pictures in our state to be the json object for each date
+        Promise.all(dates.map((date) => {
+            return fetch(URL + date)
                 .then((response) => {
                     return response.json()
                 }).catch((err) => {
@@ -61,7 +76,7 @@ class App extends Component {
         console.log(this.state.page);
         return (
             <div>
-                <SearchBar value={this.state.value}/>
+                <SearchBar value={this.state.value} handleChange={(event) => this.handleChange(event)}/>
                 <CardList cards={this.state.json}/>
                 <PagesSelector/>
             </div>
@@ -70,6 +85,23 @@ class App extends Component {
 }
 
 export default App;
+
+// user must type a valid date in the form YYYY-MM-DD
+class SearchBar extends Component {
+  constructor(props) {
+    super(props);
+  } 
+ 
+  render() {
+    return <form className="form-inline" method="GET" action={"URL" + this.props.value}>
+            <input value={this.props.value} 
+                    placeholder="YYYY-MM-DD"
+                    className="form-control" 
+                    onChange={(event) => this.props.handleChange(event)} />
+        <Button color="primary" onClick={(event) => this.handleClick(event)}>Search!</Button>
+    </form>;
+  }
+}
 
 class PagesSelector extends Component {
     render() {
@@ -111,21 +143,27 @@ class PagesSelector extends Component {
     }
 }
 
-// Props(card): json file from NASA
+// Props(card): json object from NASA
 class Card extends Component {
     render() {
+      // handle whether we want to display a picture or video
+      let picOrVideo = undefined;
+      if (this.props.card.media_type === 'video') {
+        picOrVideo = <a target="_blank" href={this.props.card.url}><img src={Image} alt={this.props.card.title}/> </a>;
+      } else {
+        picOrVideo = <img src={this.props.card.url} alt={this.props.card.title}/>;
+      }
 
-        return (<div className="card">
-            <figure>{this.props.card.media_type === 'video' ?
-                <a target="_blank" href={this.props.card.url}><img src={Image} alt={this.props.card.title}/> </a> :
-                <img src={this.props.card.url} alt={this.props.card.title}/>}
-                <figcaption>{this.props.card.title}</figcaption>
-            </figure>
+      return (<div className="card">
+          <figure>
+              {picOrVideo}
+              <figcaption>{this.props.card.title}</figcaption>
+          </figure>
         </div>);
     }
 }
 
-// Props (cards): Array of json file from NASA
+// Props (cards): Array of json objects from NASA
 class CardList extends Component {
     render() {
         let listOfCards = this.props.cards.map((card) => {
@@ -168,18 +206,5 @@ class PopUp extends Component {
                 </Modal>
             </div>
         );
-    }
-}
-
-class SearchBar extends Component {
-    render() {
-        return <form className="form-inline" method="GET" action="https://itunes.apple.com/search">
-            <div className="form-group mr-3">
-                <label htmlFor="searchQuery" className="mr-2">What do you want to hear?</label>
-                TODO
-                <input type="text" value={this.props.value} className="form-control" onChange={() => (console.log())}/>
-            </div>
-            <Button color="primary">Search!</Button>
-        </form>;
     }
 }

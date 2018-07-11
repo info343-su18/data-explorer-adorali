@@ -2,7 +2,7 @@
   box-sizing: border-box;
 }
 body {
-  background: url('./space.jpg') repeat;
+  background: url('img/space.jpg') repeat;
 }
 
 /*!* btn styling *!*/
@@ -51,3 +51,5 @@ small {
 .modal-lg {
   max-width: 90% !important;
 }
+
+/* search styling */
