@@ -82,11 +82,9 @@ class App extends Component {
     }
 
     render() {
-        console.log(this.state.page);
-        console.log(this.state.selectedCard);
         return (
             <div>
-                <SearchBar value={this.state.value} handleChange={(event) => this.handleChange(event)}/>
+                <SearchBar value={this.state.value} selectedCallback={(card) => this.cardSelection(card)} handleChange={(event) => this.handleChange(event)}/>
                 <CardList cards={this.state.json} selectedCallback={(card) => this.cardSelection(card)}/>
 
                 <PagesSelector/>
@@ -101,18 +99,28 @@ class App extends Component {
 export default App;
 
 // user must type a valid date in the form YYYY-MM-DD
+// props: handleChange()- function to handle user typing
+//        value- user input
+//        selectedCallback()- performs selection (pops up in a modal)
 class SearchBar extends Component {
-  constructor(props) {
-    super(props);
-  } 
- 
   render() {
-    return <form className="form-inline" method="GET" action={"URL" + this.props.value}>
+    return <form className="form-inline">
             <input value={this.props.value} 
                     placeholder="YYYY-MM-DD"
                     className="form-control" 
                     onChange={(event) => this.props.handleChange(event)} />
-        <Button color="primary" onClick={(event) => this.handleClick(event)}>Search!</Button>
+        <Button color="primary" onClick={() => {
+              // find selection
+              let result = fetch(URL + this.props.value)
+              .then((response) => {
+                console.log(this.props.value);
+                  return response.json()
+              }).catch((err) => {
+                  alert(err.message)
+              })
+              // present it
+              return this.props.selectedCallback(result);
+            }}>Search!</Button>
     </form>;
   }
 }
