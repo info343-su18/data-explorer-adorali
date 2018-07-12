@@ -20,7 +20,9 @@ import {Button, Modal, ModalHeader, ModalBody, ModalFooter, Alert} from 'reactst
 
 const IMAGES_PER_PAGE = 8;
 
-const URL = 'https://api.nasa.gov/planetary/apod?api_key=EzzKNCDQOcV3fJHd4ab0NQP551lX5ImTaqkZ037e&date=';
+const EARLIEST_DAY = '1995-06-16';
+
+const URL = 'https://api.nasa.gov/planetary/apod?api_key=EzzKNCDQOcV3fJHd4ab0NQP551lX5ImTaqkZ037e&hd=true&date=';
 
 class App extends Component {
     constructor(props) {
@@ -72,10 +74,12 @@ class App extends Component {
     }
 
     render() {
+      // if the selected object is an error, get ready to display it
       let error = "";
       if (this.state.selectedCard && this.state.selectedCard.code) {
         error = <BadRequestAlert message={this.state.selectedCard.msg}/>;
       }
+
       return (
           <div>
               <SearchBar selectedCallback={(card) => this.cardSelection(card)} />
@@ -114,23 +118,19 @@ class SearchBar extends Component {
     let result = fetch(URL + this.state.value)
     .then((response) => {
       return response.json();
-    }).catch((error) => {
-      console.log("im handling");
-      //this.setState({err: error});
-    })
+    });
 
     // present it
     return result.then((response) => {
       return this.props.selectedCallback(response);
-    }).catch((error) => {
-      console.log("im handling");
-
-      //this.setState({err: error});
     });
+
+    // IMPORTANT: catch statements intentionally left off because this api returns a 
+    // normal response object with error information in the case of bad input. 
   }
 
   render() {
-    return <form className="form-inline"
+    return <form className="form-inline justify-content-center"
                   onSubmit={(event) => this.handleQuery(event)}>
             <input type="text"
                     value={this.state.value} 
@@ -143,7 +143,7 @@ class SearchBar extends Component {
 }
 
 // props: message - error message
-class BadRequestAlert extends React.Component {
+class BadRequestAlert extends Component {
   constructor(props) {
     super(props);
 
@@ -208,43 +208,46 @@ class PagesSelector extends Component {
 // Props(card): json object from NASA
 class Card extends Component {
     render() {
-        if (this.props.card.media_type === 'video') {
-            return (<div className="card" onClick={() => {
-                this.props.selectedCallback(this.props.card)
-            }}>
-                <figure>
-                    <img src={Image} alt={this.props.card.title}/>
-                    <figcaption>{this.props.card.title}</figcaption>
-                </figure>
-            </div>);
-        } else if (this.props.card.media_type === 'image') {
-            return (<div className="card" onClick={() => {
-                this.props.selectedCallback(this.props.card)
-            }}>
-                <figure>
-                    <img src={this.props.card.url} alt={this.props.card.title}/>
-                    <figcaption>{this.props.card.title}</figcaption>
-                </figure>
-            </div>);
+      // we may want to display a false thumbnail in the case of a video
+      let display = "";
+      if (this.props.card.media_type === 'video') {
+        display = Image;
+      } else if (this.props.card.media_type === 'image') {
+        display = this.props.card.url;
+      }
 
-        }
-
+      return (
+        <div className="card" onClick={() => {
+              this.props.selectedCallback(this.props.card)}}>
+            <figure>
+                <img src={display} alt={this.props.card.title}/>
+                <figcaption>{this.props.card.title + " | " + this.props.card.date}</figcaption>
+            </figure>
+        </div>);
     }
 }
 
 // Props (cards): Array of json objects from NASA
 class CardList extends Component {
     render() {
-        let listOfCards = this.props.cards.map((card) => {
-                return <Card key={card.date} card={card} selectedCallback={this.props.selectedCallback}/>
-            }
-        );
-        return (<section className="spread">{listOfCards}</section>);
+      let listOfCards = this.props.cards.map((card) => {
+        return (
+          <div class="col-md-6">
+            <Card key={card.date} card={card} selectedCallback={this.props.selectedCallback}/>
+          </div>);
+        });
+      return (
+        <div class="container">
+          <div class="row">
+            {listOfCards}
+          </div>
+        </div>);
     }
 }
 
 
-// props(card: the card, callback function: to toggle the state of App to make sure it becomes undefined once you close the modal)
+// props(card: the card, callback function: to toggle the state of App to make sure it becomes undefined
+//   once you close the modal)
 class PopUp extends Component {
 
     render() {
@@ -254,30 +257,33 @@ class PopUp extends Component {
             return <div></div>;
         }
 
+        // display either the image or the provided video
+        let itemOfInterest = "";
+        if (this.props.card.media_type === 'video') {
+          itemOfInterest = <iframe width="420" height="315"
+            src={this.props.card.url}>
+          </iframe>;
+        } else if (this.props.card.media_type === 'image') {
+          itemOfInterest = <img src={this.props.card.url}/>;
+        }
+
         // else create the modal
         return (
             <div>{
-                <Modal isOpen={this.props.card !== undefined} toggle={() => {
+                <Modal size={"lg"} isOpen={this.props.card !== undefined} toggle={() => {
                     this.props.toggleCallback()
                 }} className={"Chocho"}>
                     {/*Header*/}
                     <ModalHeader toggle={() => {
                         this.props.toggleCallback()
-                    }}>{this.props.card.title}</ModalHeader>
+                    }}>{this.props.card.title + " | " + this.props.card.date}</ModalHeader>
 
                     {/*Body, here it goes the image and the descriptions*/}
-                    <ModalBody>{this.props.card.media_type === 'video'?
+                    <ModalBody size="lg">
                         <figure>
-                            <iframe width="420" height="315"
-                                    src={this.props.card.url}>
-                            </iframe>
+                            {itemOfInterest}
                             {this.props.card.copyright && <figcaption>{this.props.card.copyright}</figcaption>}
                         </figure>
-                        :
-                        <figure>
-                            <img src={this.props.card.url}/>
-                            {this.props.card.copyright && <figcaption>{this.props.card.copyright}</figcaption>}
-                        </figure>}
                         <p>{this.props.card.explanation}</p>
                     </ModalBody>
                     <ModalFooter>

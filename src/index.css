@@ -6,36 +6,26 @@ body {
   background: url('img/space.jpg') repeat;
 }
 
-/*!* btn styling *!*/
-
-.btn {
-  float: right;
-}
-
 a:focus, a:hover {
   color: aliceblue;
   text-decoration: none;
 }
 
-/* spread styling */
-
-.spread {
-  display: flex;
-  flex-wrap: wrap;
+.row {
   align-items: center;
 }
 
 /*!* card styling *!*/
-
 .card {
-  margin: 15px;
-  flex-basis: 24%;
+  margin: 10px;
 }
 
+
 img {
-  border-radius: 2px;
   width: 100%;
   height: auto;
+  border-radius: 4px;
+  box-shadow: inset 0px 0px 40px 40px white;
 }
 
 .card img {
@@ -54,3 +44,6 @@ small {
 }
 
 /* search styling */
+form {
+  align-items: center;
+}
