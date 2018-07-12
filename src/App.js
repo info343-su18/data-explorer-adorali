@@ -3,8 +3,8 @@ import './index.css';
 import 'whatwg-fetch';
 import moment from 'moment';
 import Image from './img/vp-video-editing.jpg'
-import {Pagination, PaginationItem, PaginationLink} from 'reactstrap';
 import {Button, Modal, ModalHeader, ModalBody, ModalFooter, Alert} from 'reactstrap';
+import Pagination from "react-js-pagination";
 
 
 //Sample JSON
@@ -28,11 +28,12 @@ class App extends Component {
     constructor(props) {
         super(props);
 
-        this.state = {page: 0, // current page
-                      selectedCard: undefined, // selected picture (selected by click or query)
-                      json: [], // array of picture objects
-                      date: moment(), // current date
-                      }; 
+        this.state = {
+            page: 1, // current page
+            selectedCard: undefined, // selected picture (selected by click or query)
+            json: [], // array of picture objects
+            date: moment(), // current date
+        };
 
     }
 
@@ -85,12 +86,21 @@ class App extends Component {
               <SearchBar selectedCallback={(card) => this.cardSelection(card)} />
               {error}
               <CardList cards={this.state.json} selectedCallback={(card) => this.cardSelection(card)}/>
-              <PagesSelector/>
+              <Pagination
+                  activePage={this.state.page}
+                  itemsCountPerPage={10}
+                  totalItemsCount={450}
+                  pageRangeDisplayed={5}
+                  onChange={(number) => {
+                      console.log(number)
+                  }}
+              />
               <PopUp card={this.state.selectedCard} toggleCallback={() => {
                   this.toggleCardSelection()
               }}/>
           </div>
       );
+
     }
 }
 
@@ -99,6 +109,7 @@ export default App;
 // user must type a valid date in the form YYYY-MM-DD
 // props: selectedCallback()- performs selection (pops up in a modal)
 class SearchBar extends Component {
+
   constructor(props) {
     super(props);
     this.state = {value: ""};
@@ -165,45 +176,7 @@ class BadRequestAlert extends Component {
   }
 }
 
-class PagesSelector extends Component {
-    render() {
-        return (
-            <Pagination aria-label="Page navigation">
-                <PaginationItem>
-                    <PaginationLink previous href="#"/>
-                </PaginationItem>
-                <PaginationItem>
-                    <PaginationLink>
-                        1
-                    </PaginationLink>
-                </PaginationItem>
-                <PaginationItem>
-                    <PaginationLink href="#">
-                        2
-                    </PaginationLink>
-                </PaginationItem>
-                <PaginationItem>
-                    <PaginationLink href="#">
-                        3
-                    </PaginationLink>
-                </PaginationItem>
-                <PaginationItem>
-                    <PaginationLink href="#">
-                        4
-                    </PaginationLink>
-                </PaginationItem>
-                <PaginationItem>
-                    <PaginationLink href="#">
-                        5
-                    </PaginationLink>
-                </PaginationItem>
-                <PaginationItem>
-                    <PaginationLink next href="#"/>
-                </PaginationItem>
-            </Pagination>
-        );
-    }
-}
+
 
 // Props(card): json object from NASA
 class Card extends Component {
