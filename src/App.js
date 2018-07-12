@@ -18,10 +18,13 @@ import Pagination from "react-js-pagination";
 //     "url": "https://www.youtube.com/embed/8i8-IuYoz24?rel=0"
 // }
 
+// images displayed per page
 const IMAGES_PER_PAGE = 8;
 
-const EARLIEST_DAY = '1995-06-16';
+// earliest image provided by nasa
+const EARLIEST_DAY_IMAGE = '1995-06-16';
 
+// api retrieval address
 const URL = 'https://api.nasa.gov/planetary/apod?api_key=EzzKNCDQOcV3fJHd4ab0NQP551lX5ImTaqkZ037e&hd=true&date=';
 
 class App extends Component {
@@ -30,9 +33,11 @@ class App extends Component {
 
         this.state = {
             page: 1, // current page
+
             selectedCard: undefined, // selected picture (selected by click or query)
             json: [], // array of picture objects
             date: moment(), // current date
+            totalPictures: moment().diff(EARLIEST_DAY_IMAGE, "days")
         };
 
     }
@@ -43,7 +48,7 @@ class App extends Component {
 
         // create an array of dates from current date to IMAGES_PER_PAGE days ago
         for (let i = 0; i < IMAGES_PER_PAGE; i++) {
-            dates.push(currentDate.year() + "-" + currentDate.month() + "-" + currentDate.date());
+            dates.push(currentDate.year() + "-" + (currentDate.month() + 1) + "-" + currentDate.date());
             currentDate.subtract(1, 'days');
         }
 
@@ -57,10 +62,6 @@ class App extends Component {
                     alert(err.message)
                 })
         })).then((jsonArr) => {
-
-            //Test code TODO
-            console.log(jsonArr);
-
             this.setState({json: jsonArr});
         })
 
@@ -74,35 +75,68 @@ class App extends Component {
         this.setState({selectedCard: undefined});
     }
 
-    render() {
-      // if the selected object is an error, get ready to display it
-      let error = "";
-      if (this.state.selectedCard && this.state.selectedCard.code) {
-        error = <BadRequestAlert message={this.state.selectedCard.msg}/>;
-      }
+    handlePageChange(number) {
+        let currentDate = this.state.date.clone().subtract(8 * (number - 1), 'days');
+        console.log(currentDate.year() + "-" + (currentDate.month() + 1) + "-" + currentDate.date());
+        let updatingJSON = []; // the array to be processed and ocnverted to arra
 
-      return (
-          <div>
-              <SearchBar selectedCallback={(card) => this.cardSelection(card)} />
-              {error}
-              <CardList cards={this.state.json} selectedCallback={(card) => this.cardSelection(card)}/>
-              <Pagination
-                  hideDisabled
-                  activePage={this.state.page}
-                  activeLinkClass={"activelink"}
-                  linkClass={"navlinks"}
-                  itemsCountPerPage={10}
-                  totalItemsCount={450}
-                  pageRangeDisplayed={5}
-                  onChange={(number) => {
-                      console.log(number)
-                  }}
-              />
-              <PopUp card={this.state.selectedCard} toggleCallback={() => {
-                  this.toggleCardSelection()
-              }}/>
-          </div>
-      );
+        // Adding all the dates into the updating JSON array.
+        while (updatingJSON.length < 8 && !currentDate.isBefore(EARLIEST_DAY_IMAGE)) {
+            updatingJSON.push(currentDate.year() + "-" + (currentDate.month() + 1) + "-" + currentDate.date());
+            currentDate.subtract(1, 'days');
+        }
+        // Fetching data
+        let promiseArr = updatingJSON.map((date) => {
+            return fetch(URL + date).then((response) => {
+                console.log(response);
+                return response
+            })
+        });
+        // Waiting for all the data to fetch
+        Promise.all(promiseArr).then((data) => {
+            // Filter those responses that doesn't work. Some of the dates won't have pictures.
+            return data.filter((response) => response.ok === true)
+        }).then((filteredArr) => {
+
+            // With the filtered array, we convert the promises to json files.
+            Promise.all(filteredArr.map(data => data.json())).then(
+                (jsonArr) => {
+                    // Set state
+                    this.setState({page: number, json: jsonArr})
+                }
+            )
+        });
+
+
+    }
+
+    render() {
+        let error = "";
+        if (this.state.selectedCard && this.state.selectedCard.code) {
+            error = <BadRequestAlert message={this.state.selectedCard.msg}/>;
+        }
+        return (
+            <div>
+                <SearchBar selectedCallback={(card) => this.cardSelection(card)}/>
+                {error}
+                <CardList cards={this.state.json} selectedCallback={(card) => this.cardSelection(card)}/>
+                <Pagination
+                    activePage={this.state.page}
+                    hideDisabled
+                    activeLinkClass={"activelink"}
+                    linkClass={"navlinks"}
+                    itemsCountPerPage={1}
+                    totalItemsCount={Math.ceil(this.state.totalPictures / 8)}
+                    pageRangeDisplayed={6}
+                    onChange={(number) => {
+                        this.handlePageChange(number)
+                    }}
+                />
+                <PopUp card={this.state.selectedCard} toggleCallback={() => {
+                    this.toggleCardSelection()
+                }}/>
+            </div>
+        );
 
     }
 }
@@ -147,13 +181,13 @@ class SearchBar extends Component {
     return <form className="form-inline justify-content-center"
                   onSubmit={(event) => this.handleQuery(event)}>
             <input type="text"
-                    value={this.state.value} 
-                    placeholder="YYYY-MM-DD"
-                    className="form-control" 
-                    onChange={(event) => this.handleChange(event)} />
-        <Button color="light" onClick={(event) => this.handleQuery(event)}>Search!</Button>
-    </form>;
-  }
+                   value={this.state.value}
+                   placeholder="YYYY-MM-DD"
+                   className="form-control"
+                   onChange={(event) => this.handleChange(event)}/>
+            <Button color="light" onClick={(event) => this.handleQuery(event)}>Search!</Button>
+        </form>;
+    }
 }
 
 // props: message - error message
