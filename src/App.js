@@ -19,7 +19,7 @@ import Pagination from "react-js-pagination";
 // }
 
 const IMAGES_PER_PAGE = 8;
-
+const EARLIEST_DAY_IMAGE = '1995-06-16';
 const URL = 'https://api.nasa.gov/planetary/apod?api_key=EzzKNCDQOcV3fJHd4ab0NQP551lX5ImTaqkZ037e&date=';
 
 class App extends Component {
@@ -28,9 +28,11 @@ class App extends Component {
 
         this.state = {
             page: 1, // current page
+
             selectedCard: undefined, // selected picture (selected by click or query)
             json: [], // array of picture objects
             date: moment(), // current date
+            totalPictures: moment().diff(EARLIEST_DAY_IMAGE, "days")
         };
 
     }
@@ -41,7 +43,7 @@ class App extends Component {
 
         // create an array of dates from current date to IMAGES_PER_PAGE days ago
         for (let i = 0; i < IMAGES_PER_PAGE; i++) {
-            dates.push(currentDate.year() + "-" + currentDate.month() + "-" + currentDate.date());
+            dates.push(currentDate.year() + "-" + (currentDate.month() + 1) + "-" + currentDate.date());
             currentDate.subtract(1, 'days');
         }
 
@@ -55,10 +57,6 @@ class App extends Component {
                     alert(err.message)
                 })
         })).then((jsonArr) => {
-
-            //Test code TODO
-            console.log(jsonArr);
-
             this.setState({json: jsonArr});
         })
 
@@ -72,30 +70,67 @@ class App extends Component {
         this.setState({selectedCard: undefined});
     }
 
+    handlePageChange(number) {
+        let currentDate = this.state.date.clone().subtract(8 * (number - 1), 'days');
+        console.log(currentDate.year() + "-" + (currentDate.month() + 1) + "-" + currentDate.date());
+        let updatingJSON = [];
+
+        while (updatingJSON.length < 8 && !currentDate.isBefore(EARLIEST_DAY_IMAGE)) {
+            updatingJSON.push(currentDate.year() + "-" + (currentDate.month() + 1) + "-" + currentDate.date());
+            currentDate.subtract(1, 'days');
+        }
+        console.log(updatingJSON);
+        let promiseArr = updatingJSON.map((date) => {
+            return fetch(URL + date).then((response) => {
+                console.log(response);
+                return response
+            })
+        });
+
+        Promise.all(promiseArr).then((data) => {
+            console.log("before filter", data);
+            return data.filter((response) => response.ok === true)
+        }).then( (filteredArr) => {
+            console.log("filtered array", filteredArr);
+            return Promise.all(filteredArr.map(data => data.json())).then(
+                (jsonArr) => {this.setState({page:number, json:jsonArr})}
+            )
+        });
+
+
+
+        //promiseArr = promiseArr.filter((promise) => promise.ok);
+        //console.log(promiseArr);
+        /*.then((promisesArr) => promisesArr.filter((promise) => {
+            return promise.ok
+        })).then((jsonArr) => jsonArr.map((data) => data.json())).then((jsonArr) => {console.log(jsonArr)})*/
+
+    }
+
     render() {
-      let error = "";
-      if (this.state.selectedCard && this.state.selectedCard.code) {
-        error = <BadRequestAlert message={this.state.selectedCard.msg}/>;
-      }
-      return (
-          <div>
-              <SearchBar selectedCallback={(card) => this.cardSelection(card)} />
-              {error}
-              <CardList cards={this.state.json} selectedCallback={(card) => this.cardSelection(card)}/>
-              <Pagination
-                  activePage={this.state.page}
-                  itemsCountPerPage={10}
-                  totalItemsCount={450}
-                  pageRangeDisplayed={5}
-                  onChange={(number) => {
-                      console.log(number)
-                  }}
-              />
-              <PopUp card={this.state.selectedCard} toggleCallback={() => {
-                  this.toggleCardSelection()
-              }}/>
-          </div>
-      );
+        let error = "";
+        if (this.state.selectedCard && this.state.selectedCard.code) {
+            error = <BadRequestAlert message={this.state.selectedCard.msg}/>;
+        }
+        return (
+            <div>
+                <SearchBar selectedCallback={(card) => this.cardSelection(card)}/>
+                {error}
+                <CardList cards={this.state.json} selectedCallback={(card) => this.cardSelection(card)}/>
+                <Pagination
+                    activePage={this.state.page}
+                    itemsCountPerPage={1}
+                    totalItemsCount={Math.ceil(this.state.totalPictures / 8)}
+                    pageRangeDisplayed={6}
+                    onChange={(number) => {
+                        this.handlePageChange(number)
+                    }}
+                />
+                <PopUp card={this.state.selectedCard} toggleCallback={() => {
+                    this.toggleCardSelection()
+                }}/>
+            </div>
+        );
 
     }
 }
@@ -106,76 +141,75 @@ export default App;
 // props: selectedCallback()- performs selection (pops up in a modal)
 class SearchBar extends Component {
 
-  constructor(props) {
-    super(props);
-    this.state = {value: ""};
-  }
+    constructor(props) {
+        super(props);
+        this.state = {value: ""};
+    }
 
-  // keeps track of the user input
-  handleChange(event) {
-    event.preventDefault();
-    this.setState({value: event.target.value});
-  } 
+    // keeps track of the user input
+    handleChange(event) {
+        event.preventDefault();
+        this.setState({value: event.target.value});
+    }
 
-  // requests the user's picture
-  handleQuery(event) {
-    event.preventDefault();
+    // requests the user's picture
+    handleQuery(event) {
+        event.preventDefault();
 
-    // find selection
-    let result = fetch(URL + this.state.value)
-    .then((response) => {
-      return response.json();
-    }).catch((error) => {
-      console.log("im handling");
-      //this.setState({err: error});
-    })
+        // find selection
+        let result = fetch(URL + this.state.value)
+            .then((response) => {
+                return response.json();
+            }).catch((error) => {
+                console.log("im handling");
+                //this.setState({err: error});
+            });
 
-    // present it
-    return result.then((response) => {
-      return this.props.selectedCallback(response);
-    }).catch((error) => {
-      console.log("im handling");
+        // present it
+        return result.then((response) => {
+            return this.props.selectedCallback(response);
+        }).catch((error) => {
+            console.log("im handling");
 
-      //this.setState({err: error});
-    });
-  }
+            //this.setState({err: error});
+        });
+    }
 
-  render() {
-    return <form className="form-inline"
-                  onSubmit={(event) => this.handleQuery(event)}>
+    render() {
+        return <form className="form-inline"
+                     onSubmit={(event) => this.handleQuery(event)}>
             <input type="text"
-                    value={this.state.value} 
-                    placeholder="YYYY-MM-DD"
-                    className="form-control" 
-                    onChange={(event) => this.handleChange(event)} />
-        <Button color="light" onClick={(event) => this.handleQuery(event)}>Search!</Button>
-    </form>;
-  }
+                   value={this.state.value}
+                   placeholder="YYYY-MM-DD"
+                   className="form-control"
+                   onChange={(event) => this.handleChange(event)}/>
+            <Button color="light" onClick={(event) => this.handleQuery(event)}>Search!</Button>
+        </form>;
+    }
 }
 
 // props: message - error message
 class BadRequestAlert extends React.Component {
-  constructor(props) {
-    super(props);
+    constructor(props) {
+        super(props);
 
-    this.state = {
-      visible: true
-    };
-  }
+        this.state = {
+            visible: true
+        };
+    }
 
-  onDismiss() {
-    this.setState({ visible: false });
-  }
+    onDismiss() {
+        this.setState({visible: false});
+    }
 
-  render() {
-    return (
-      <Alert color="danger" isOpen={this.state.visible} toggle={() => this.onDismiss()}>
-        {this.props.message}
-      </Alert>
-    );
-  }
+    render() {
+        return (
+            <Alert color="danger" isOpen={this.state.visible} toggle={() => this.onDismiss()}>
+                {this.props.message}
+            </Alert>
+        );
+    }
 }
-
 
 
 // Props(card): json object from NASA
