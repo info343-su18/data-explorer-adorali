@@ -125,6 +125,10 @@ class App extends Component {
                     hideDisabled
                     activeLinkClass={"activelink"}
                     linkClass={"navlinks"}
+                    nextPageText={">"}
+                    lastPagetext={">>"}
+                    prevPagetext={"<"}
+                    firstPageText={"<<"}
                     itemsCountPerPage={1}
                     totalItemsCount={Math.ceil(this.state.totalPictures / 8)}
                     pageRangeDisplayed={6}
@@ -259,32 +263,38 @@ class AsteroidList extends Component {
     let asteroidURL = 'https://api.nasa.gov/neo/rest/v1/feed?api_key=EzzKNCDQOcV3fJHd4ab0NQP551lX5ImTaqkZ037e';
     
     // find selection
-    return fetch(asteroidURL + "&start_date=" + date + "&end_date=" + date)
-    .then((response) => {
+    let promise = fetch(asteroidURL + "&start_date=" + date + "&end_date=" + date);
+    let JSONpromise = promise.then((response) => {
       return response.json();
-    }).then((response) => {
+    });
+    let result = JSONpromise.then((response) => {
+      console.log(response.near_earth_objects[date]);
       return response.near_earth_objects[date];
     });
+
+    console.log(result);
+    return result;
   }
 
   render() {
     let ok = this.findAsteroidList(this.props.date);
-    console.log(ok);
-    let listOfAsteroids = ok.map((asteroid) => {
-      return (
-        <div className="col-md-3" key={asteroid.neo_reference_id}>
-          <p>hi</p>
-        </div>);
-      });
+    //console.log(ok);
+    return false;
+    // let listOfAsteroids = ok.map((asteroid) => {
+    //   return (
+    //     <div className="col-md-3" key={asteroid.neo_reference_id}>
+    //       <p>hi</p>
+    //     </div>);
+    //   });
 
-    return (
-      <div className="container">
-        <p>There are {this.props.list.length} asteroids that got closest to Earth on {this.props.date}.</p>
-        <div className="row">
-          {listOfAsteroids}
-        </div>
-      </div>
-    );
+    // return (
+    //   <div className="container">
+    //     <p>There are {this.props.list.length} asteroids that got closest to Earth on {this.props.date}.</p>
+    //     <div className="row">
+    //       {listOfAsteroids}
+    //     </div>
+    //   </div>
+    // );
   }
 }
 
