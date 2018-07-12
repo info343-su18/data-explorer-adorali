@@ -76,12 +76,12 @@ class App extends Component {
     }
 
     handlePageChange(number) {
-        let currentDate = this.state.date.clone().subtract(8 * (number - 1), 'days');
+        let currentDate = this.state.date.clone().subtract(IMAGES_PER_PAGE * (number - 1), 'days');
         console.log(currentDate.year() + "-" + (currentDate.month() + 1) + "-" + currentDate.date());
         let updatingJSON = []; // the array to be processed and ocnverted to arra
 
         // Adding all the dates into the updating JSON array.
-        while (updatingJSON.length < 8 && !currentDate.isBefore(EARLIEST_DAY_IMAGE)) {
+        while (updatingJSON.length < IMAGES_PER_PAGE && !currentDate.isBefore(EARLIEST_DAY_IMAGE)) {
             updatingJSON.push(currentDate.year() + "-" + (currentDate.month() + 1) + "-" + currentDate.date());
             currentDate.subtract(1, 'days');
         }
@@ -106,8 +106,6 @@ class App extends Component {
                 }
             )
         });
-
-
     }
 
     render() {
@@ -126,8 +124,8 @@ class App extends Component {
                     activeLinkClass={"activelink"}
                     linkClass={"navlinks"}
                     nextPageText={">"}
-                    lastPagetext={">>"}
-                    prevPagetext={"<"}
+                    lastPageText={">>"}
+                    prevPageText={"<"}
                     firstPageText={"<<"}
                     itemsCountPerPage={1}
                     totalItemsCount={Math.ceil(this.state.totalPictures / 8)}
