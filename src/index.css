@@ -47,15 +47,22 @@ small {
 
 /* pagination styling */
 
+@media (min-width: 768px) {
+  .navlinks {
+    font-size: 2rem;
+  }
+  
+}
+
 .navlinks {
   color: white;
   margin: 5px;
-  font-size: 2rem;
 }
 
 .activelink {
   background-color: rgba(234, 236, 236, 0.5);
-  box-shadow: inset 0px 0px 5px 1px black; 
+  box-shadow: inset 0px 0px 15px 1px black; 
+  box-shadow: 0px 0px 15px 1px white; 
   border-radius: 10px;
 }
 

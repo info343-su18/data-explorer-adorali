@@ -297,7 +297,7 @@ class PopUp extends Component {
                     <ModalFooter>
                         <Button color="secondary" onClick={() => {
                             this.props.toggleCallback()
-                        }}>Cancel</Button>
+                        }}>Close</Button>
                     </ModalFooter>
                 </Modal>}
             </div>
