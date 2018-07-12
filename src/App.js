@@ -73,37 +73,35 @@ class App extends Component {
     handlePageChange(number) {
         let currentDate = this.state.date.clone().subtract(8 * (number - 1), 'days');
         console.log(currentDate.year() + "-" + (currentDate.month() + 1) + "-" + currentDate.date());
-        let updatingJSON = [];
+        let updatingJSON = []; // the array to be processed and ocnverted to arra
 
+        // Adding all the dates into the updating JSON array.
         while (updatingJSON.length < 8 && !currentDate.isBefore(EARLIEST_DAY_IMAGE)) {
             updatingJSON.push(currentDate.year() + "-" + (currentDate.month() + 1) + "-" + currentDate.date());
             currentDate.subtract(1, 'days');
         }
-        console.log(updatingJSON);
+        // Fetching data
         let promiseArr = updatingJSON.map((date) => {
             return fetch(URL + date).then((response) => {
                 console.log(response);
                 return response
             })
         });
-
+        // Waiting for all the data to fetch
         Promise.all(promiseArr).then((data) => {
-            console.log("before filter", data);
+            // Filter those responses that doesn't work. Some of the dates won't have pictures.
             return data.filter((response) => response.ok === true)
-        }).then( (filteredArr) => {
-            console.log("filtered array", filteredArr);
-            return Promise.all(filteredArr.map(data => data.json())).then(
-                (jsonArr) => {this.setState({page:number, json:jsonArr})}
+        }).then((filteredArr) => {
+
+            // With the filtered array, we convert the promises to json files.
+            Promise.all(filteredArr.map(data => data.json())).then(
+                (jsonArr) => {
+                    // Set state
+                    this.setState({page: number, json: jsonArr})
+                }
             )
         });
 
-
-
-        //promiseArr = promiseArr.filter((promise) => promise.ok);
-        //console.log(promiseArr);
-        /*.then((promisesArr) => promisesArr.filter((promise) => {
-            return promise.ok
-        })).then((jsonArr) => jsonArr.map((data) => data.json())).then((jsonArr) => {console.log(jsonArr)})*/
 
     }
 
