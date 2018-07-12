@@ -240,17 +240,52 @@ class CardList extends Component {
     render() {
       let listOfCards = this.props.cards.map((card) => {
         return (
-          <div class="col-md-6">
-            <Card key={card.date} card={card} selectedCallback={this.props.selectedCallback}/>
+          <div className="col-md-6" key={card.date}>
+            <Card card={card} selectedCallback={this.props.selectedCallback}/>
           </div>);
         });
       return (
-        <div class="container">
-          <div class="row">
+        <div className="container">
+          <div className="row">
             {listOfCards}
           </div>
         </div>);
     }
+}
+
+// props: date - day that these asteroids are closest to earth
+class AsteroidList extends Component {
+  findAsteroidList(date) {
+    let asteroidURL = 'https://api.nasa.gov/neo/rest/v1/feed?api_key=EzzKNCDQOcV3fJHd4ab0NQP551lX5ImTaqkZ037e';
+    
+    // find selection
+    return fetch(asteroidURL + "&start_date=" + date + "&end_date=" + date)
+    .then((response) => {
+      return response.json();
+    }).then((response) => {
+      return response.near_earth_objects[date];
+    });
+  }
+
+  render() {
+    let ok = this.findAsteroidList(this.props.date);
+    console.log(ok);
+    let listOfAsteroids = ok.map((asteroid) => {
+      return (
+        <div className="col-md-3" key={asteroid.neo_reference_id}>
+          <p>hi</p>
+        </div>);
+      });
+
+    return (
+      <div className="container">
+        <p>There are {this.props.list.length} asteroids that got closest to Earth on {this.props.date}.</p>
+        <div className="row">
+          {listOfAsteroids}
+        </div>
+      </div>
+    );
+  }
 }
 
 
@@ -259,7 +294,6 @@ class CardList extends Component {
 class PopUp extends Component {
 
     render() {
-
         // If the card is undefined return nothing
         if (this.props.card === undefined || this.props.card.code) {
             return <div></div>;
@@ -293,6 +327,7 @@ class PopUp extends Component {
                             {this.props.card.copyright && <figcaption>{this.props.card.copyright}</figcaption>}
                         </figure>
                         <p>{this.props.card.explanation}</p>
+                        <AsteroidList date={this.props.card.date}/>
                     </ModalBody>
                     <ModalFooter>
                         <Button color="secondary" onClick={() => {

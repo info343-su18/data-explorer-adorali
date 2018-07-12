@@ -27,7 +27,7 @@ img {
   border-radius: 4px;
 }
 
-img:focus, img:hover {
+.card img:focus, .card img:hover {
   filter: brightness(75%);
 }
 
@@ -56,7 +56,7 @@ small {
 
 .navlinks {
   color: white;
-  margin: 5px;
+  margin: 15px;
 }
 
 .activelink {
