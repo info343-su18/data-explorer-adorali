@@ -3,12 +3,8 @@
 }
 
 body {
+  font-family: 'Space Mono', monospace !important; 
   background: url('img/space.jpg') repeat;
-}
-
-a:focus, a:hover {
-  color: aliceblue;
-  text-decoration: none;
 }
 
 .row {
@@ -21,12 +17,18 @@ a:focus, a:hover {
   margin: 10px;
 }
 
+figcaption {
+  margin: 5px;
+}
 
 img {
   width: 100%;
   height: auto;
   border-radius: 4px;
-  box-shadow: inset 0px 0px 40px 40px white;
+}
+
+img:focus, img:hover {
+  filter: brightness(75%);
 }
 
 .card img {
@@ -38,13 +40,25 @@ small {
   color: aliceblue;
 }
 
-
 /* modal styling */
 .modal-lg {
-  max-width: 90% !important;
+  max-width: 80% !important;
 }
 
-/* search styling */
-form {
-  align-items: center;
+/* pagination styling */
+
+.navlinks {
+  color: white;
+  margin: 5px;
+  font-size: 2rem;
+}
+
+.activelink {
+  background-color: rgba(234, 236, 236, 0.5);
+  box-shadow: inset 0px 0px 5px 1px black; 
+  border-radius: 10px;
+}
+
+.navlinks:focus, .navlinks:hover {
+  color: white;
 }

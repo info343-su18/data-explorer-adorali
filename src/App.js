@@ -87,7 +87,10 @@ class App extends Component {
               {error}
               <CardList cards={this.state.json} selectedCallback={(card) => this.cardSelection(card)}/>
               <Pagination
+                  hideDisabled
                   activePage={this.state.page}
+                  activeLinkClass={"activelink"}
+                  linkClass={"navlinks"}
                   itemsCountPerPage={10}
                   totalItemsCount={450}
                   pageRangeDisplayed={5}
@@ -175,8 +178,6 @@ class BadRequestAlert extends Component {
     );
   }
 }
-
-
 
 // Props(card): json object from NASA
 class Card extends Component {
