@@ -151,39 +151,39 @@ export default App;
 // props: selectedCallback()- performs selection (pops up in a modal)
 class SearchBar extends Component {
 
-  constructor(props) {
-    super(props);
-    this.state = {value: ""};
-  }
+    constructor(props) {
+        super(props);
+        this.state = {value: ""};
+    }
 
-  // keeps track of the user input
-  handleChange(event) {
-    event.preventDefault();
-    this.setState({value: event.target.value});
-  } 
+    // keeps track of the user input
+    handleChange(event) {
+        event.preventDefault();
+        this.setState({value: event.target.value});
+    }
 
-  // requests the user's picture
-  handleQuery(event) {
-    event.preventDefault();
+    // requests the user's picture
+    handleQuery(event) {
+        event.preventDefault();
 
-    // find selection
-    let result = fetch(URL + this.state.value)
-    .then((response) => {
-      return response.json();
-    });
+        // find selection
+        let result = fetch(URL + this.state.value)
+            .then((response) => {
+                return response.json();
+            });
 
-    // present it
-    return result.then((response) => {
-      return this.props.selectedCallback(response);
-    });
+        // present it
+        return result.then((response) => {
+            return this.props.selectedCallback(response);
+        });
 
-    // IMPORTANT: catch statements intentionally left off because this api returns a 
-    // normal response object with error information in the case of bad input. 
-  }
+        // IMPORTANT: catch statements intentionally left off because this api returns a
+        // normal response object with error information in the case of bad input.
+    }
 
-  render() {
-    return <form className="form-inline justify-content-center"
-                  onSubmit={(event) => this.handleQuery(event)}>
+    render() {
+        return <form className="form-inline justify-content-center"
+                     onSubmit={(event) => this.handleQuery(event)}>
             <input type="text"
                    value={this.state.value}
                    placeholder="YYYY-MM-DD"
@@ -196,30 +196,31 @@ class SearchBar extends Component {
 
 // props: message - error message
 class BadRequestAlert extends Component {
-  constructor(props) {
-    super(props);
+    constructor(props) {
+        super(props);
 
-    this.state = {
-      visible: true
-    };
-  }
+        this.state = {
+            visible: true
+        };
+    }
 
-  onDismiss() {
-    this.setState({ visible: false });
-  }
+    onDismiss() {
+        this.setState({visible: false});
+    }
 
-  render() {
-    return (
-      <Alert color="danger" isOpen={this.state.visible} toggle={() => this.onDismiss()}>
-        {this.props.message}
-      </Alert>
-    );
-  }
+    render() {
+        return (
+            <Alert color="danger" isOpen={this.state.visible} toggle={() => this.onDismiss()}>
+                {this.props.message}
+            </Alert>
+        );
+    }
 }
 
 // Props(card): json object from NASA
 class Card extends Component {
     render() {
+
       // we may want to display a false thumbnail in the case of a video
       let display = "";
       if (this.props.card.media_type === 'video') {
@@ -242,60 +243,66 @@ class Card extends Component {
 // Props (cards): Array of json objects from NASA
 class CardList extends Component {
     render() {
-      let listOfCards = this.props.cards.map((card) => {
-        return (
-          <div className="col-md-6" key={card.date}>
-            <Card card={card} selectedCallback={this.props.selectedCallback}/>
-          </div>);
+        let listOfCards = this.props.cards.map((card) => {
+            return (
+                <div className="col-md-6" key={card.date}>
+                    <Card card={card} selectedCallback={this.props.selectedCallback}/>
+                </div>);
         });
-      return (
-        <div className="container">
-          <div className="row">
-            {listOfCards}
-          </div>
-        </div>);
+        return (
+            <div className="container">
+                <div className="row">
+                    {listOfCards}
+                </div>
+            </div>);
     }
 }
 
 // props: date - day that these asteroids are closest to earth
 class AsteroidList extends Component {
-  findAsteroidList(date) {
-    let asteroidURL = 'https://api.nasa.gov/neo/rest/v1/feed?api_key=EzzKNCDQOcV3fJHd4ab0NQP551lX5ImTaqkZ037e';
-    
-    // find selection
-    let promise = fetch(asteroidURL + "&start_date=" + date + "&end_date=" + date);
-    let JSONpromise = promise.then((response) => {
-      return response.json();
-    });
-    let result = JSONpromise.then((response) => {
-      console.log(response.near_earth_objects[date]);
-      return response.near_earth_objects[date];
-    });
 
-    console.log(result);
-    return result;
-  }
+    constructor(props){
+        super(props);
+        this.state = {asteroids:[]};
+    }
 
-  render() {
-    let ok = this.findAsteroidList(this.props.date);
-    //console.log(ok);
-    return false;
-    // let listOfAsteroids = ok.map((asteroid) => {
-    //   return (
-    //     <div className="col-md-3" key={asteroid.neo_reference_id}>
-    //       <p>hi</p>
-    //     </div>);
-    //   });
+    componentDidMount() {
+        console.log("componentDidMount()");
+        let asteroidURL = 'https://api.nasa.gov/neo/rest/v1/feed?api_key=EzzKNCDQOcV3fJHd4ab0NQP551lX5ImTaqkZ037e';
 
-    // return (
-    //   <div className="container">
-    //     <p>There are {this.props.list.length} asteroids that got closest to Earth on {this.props.date}.</p>
-    //     <div className="row">
-    //       {listOfAsteroids}
-    //     </div>
-    //   </div>
-    // );
-  }
+        // find selection
+        let promise = fetch(asteroidURL + "&start_date=" + this.props.date + "&end_date=" + this.props.date);
+         promise.then((response) => {
+            return response.json();
+        }).then(response => response.near_earth_objects[this.props.date])
+            .then(objects => {this.setState({asteroids:objects})})
+            .catch((err) => (alert(err.message)));
+
+    }
+
+    render() {
+        console.log("called render()");
+        console.log("state: ", this.state.asteroids);
+        return <div>Asteroid</div>;
+        // let ok = this.findAsteroidList(this.props.date);
+        // //console.log(ok);
+        // return false;
+        // let listOfAsteroids = ok.map((asteroid) => {
+        //   return (
+        //     <div className="col-md-3" key={asteroid.neo_reference_id}>
+        //       <p>hi</p>
+        //     </div>);
+        //   });
+
+        // return (
+        //   <div className="container">
+        //     <p>There are {this.props.list.length} asteroids that got closest to Earth on {this.props.date}.</p>
+        //     <div className="row">
+        //       {listOfAsteroids}
+        //     </div>
+        //   </div>
+        // );
+    }
 }
 
 
@@ -312,6 +319,7 @@ class PopUp extends Component {
         // display either the image or the provided video
         let itemOfInterest = "";
         if (this.props.card.media_type === 'video') {
+
           itemOfInterest = <iframe width="420" height="315"
             src={this.props.card.url} title={this.props.card.title} alt={this.props.card.title} aria-labelledby={this.props.card.title}>
           </iframe>;
@@ -319,6 +327,7 @@ class PopUp extends Component {
           itemOfInterest = <img src={this.props.card.url} alt={this.props.card.title} aria-labelledby={this.props.card.title}/>;
         }
 
+        console.log("called me");
         // else create the modal
         return (
             <div>{
@@ -337,6 +346,7 @@ class PopUp extends Component {
                             {this.props.card.copyright && <figcaption>{this.props.card.copyright}</figcaption>}
                         </figure>
                         <p>{this.props.card.explanation}</p>
+
                         <AsteroidList date={this.props.card.date}/>
                     </ModalBody>
                     <ModalFooter>
