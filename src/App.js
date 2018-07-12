@@ -232,7 +232,7 @@ class Card extends Component {
         <div className="card" onClick={() => {
               this.props.selectedCallback(this.props.card)}}>
             <figure>
-                <img src={display} alt={this.props.card.title}/>
+                <img src={display} alt={this.props.card.title} aria-labelledby={this.props.card.title}/>
                 <figcaption>{this.props.card.title + " | " + this.props.card.date}</figcaption>
             </figure>
         </div>);
@@ -313,10 +313,10 @@ class PopUp extends Component {
         let itemOfInterest = "";
         if (this.props.card.media_type === 'video') {
           itemOfInterest = <iframe width="420" height="315"
-            src={this.props.card.url}>
+            src={this.props.card.url} title={this.props.card.title} alt={this.props.card.title} aria-labelledby={this.props.card.title}>
           </iframe>;
         } else if (this.props.card.media_type === 'image') {
-          itemOfInterest = <img src={this.props.card.url}/>;
+          itemOfInterest = <img src={this.props.card.url} alt={this.props.card.title} aria-labelledby={this.props.card.title}/>;
         }
 
         // else create the modal
