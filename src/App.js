@@ -80,6 +80,25 @@ class App extends Component {
 
     // CALL BACK FUNCTIONS ------------------
 
+    // requests the user's picture
+    handleSearchQuery(value, event) {
+        event.preventDefault();
+
+        // find selection
+        let result = fetch(URL + value)
+            .then((response) => {
+                return response.json();
+            });
+
+        // present it
+        return result.then((response) => {
+            return this.cardSelection(response);
+        });
+
+        // IMPORTANT: catch statements intentionally left off because this api returns a
+        // normal response object with error information in the case of bad input.
+    }
+
     // Newest to oldest call back. Variable, bool: true for new to old, false for old to new,
     makeChrono(newToOld) {
         this.setState({picturesNewToOld: newToOld, page: 1}, () => {this.handlePageChange(1)});
@@ -96,7 +115,11 @@ class App extends Component {
     }
 
     // Handle the page. Takes in the page number.
-    handlePageChange(number) {
+    handlePageChange(number, event) {
+        if (event) {
+            event.preventDefault();
+        }
+
         let currentDate = "";
         if (this.state.picturesNewToOld) {
             currentDate = DATE.clone().subtract(IMAGES_PER_PAGE * (number - 1), 'days');
@@ -148,10 +171,11 @@ class App extends Component {
         }
         return (
             <div>
-                <SearchBar selectedCallback={(card) => this.cardSelection(card)} 
-                            makeChrono={(bool) => this.makeChrono(bool)}/>
+                <SearchBar handleSearchQuery={(value, event) => this.handleSearchQuery(value, event)} placeholder={"YYYY-MM-DD"} />
+                <Sorter color="light" makeChrono={(bool) => this.makeChrono(bool)} />
                 {error}
                 <CardList cards={this.state.json} selectedCallback={(card) => this.cardSelection(card)}/>
+                <div className={"d-flex justify-content-center"}>
                 <Pagination
                     activePage={this.state.page}
                     hideDisabled
@@ -165,9 +189,11 @@ class App extends Component {
                     totalItemsCount={Math.ceil(this.state.totalPictures / IMAGES_PER_PAGE)}
                     pageRangeDisplayed={3}
                     onChange={(number) => {
-                        this.handlePageChange(number)
+                        this.handlePageChange(number);
                     }}
                 />
+                </div>
+                <SearchBar handleSearchQuery={(value, event) => this.handlePageChange(value, event)} placeholder={"page # out of " + Math.ceil(this.state.totalPictures / IMAGES_PER_PAGE)}/>
                 <PopUp card={this.state.selectedCard} toggleCallback={() => {
                     this.toggleCardSelection()
                 }}/>
@@ -179,9 +205,8 @@ class App extends Component {
 
 export default App;
 
-// user must type a valid date in the form YYYY-MM-DD
-// props: selectedCallback()- performs selection (pops up in a modal), 
-// makeChrono & makeReverseChrono - togglers for sort selector
+// props: placeholder - placeholder text
+//   handleSearchQuery - callback for submission
 class SearchBar extends Component {
 
     constructor(props) {
@@ -195,35 +220,15 @@ class SearchBar extends Component {
         this.setState({value: event.target.value});
     }
 
-    // requests the user's picture
-    handleQuery(event) {
-        event.preventDefault();
-
-        // find selection
-        let result = fetch(URL + this.state.value)
-            .then((response) => {
-                return response.json();
-            });
-
-        // present it
-        return result.then((response) => {
-            return this.props.selectedCallback(response);
-        });
-
-        // IMPORTANT: catch statements intentionally left off because this api returns a
-        // normal response object with error information in the case of bad input.
-    }
-
     render() {
         return <form className="form-inline justify-content-center"
-                     onSubmit={(event) => this.handleQuery(event)}>
+                     onSubmit={(event) => this.props.handleSearchQuery(this.state.value, event)}>
             <input type="text"
                    value={this.state.value}
-                   placeholder="YYYY-MM-DD"
+                   placeholder={this.props.placeholder}
                    className="form-control"
                    onChange={(event) => this.handleChange(event)}/>
-            <Button color="light" onClick={(event) => this.handleQuery(event)}>Search!</Button>
-            <Sorter color="light" makeChrono={this.props.makeChrono} />
+            <Button color="light" onClick={(event) => this.props.handleSearchQuery(this.state.value, event)}>Search!</Button>
         </form>;
     }
 }
@@ -244,15 +249,18 @@ class Sorter extends Component {
   
     render() {
       return (
-        <Dropdown isOpen={this.state.dropdownOpen} toggle={() => this.toggle()}>
-          <DropdownToggle caret>
-            Select Order
-          </DropdownToggle>
-          <DropdownMenu>
-            <DropdownItem onClick={() => this.props.makeChrono(true)}>Newest to oldest</DropdownItem>
-            <DropdownItem onClick={() => this.props.makeChrono(false)}>Oldest to newest</DropdownItem>
-          </DropdownMenu>
-        </Dropdown>
+          <div className={"d-flex justify-content-center"}>
+            <Dropdown isOpen={this.state.dropdownOpen} 
+                        toggle={() => this.toggle()}>
+            <DropdownToggle caret>
+                Select Order
+            </DropdownToggle>
+            <DropdownMenu>
+                <DropdownItem onClick={() => this.props.makeChrono(true)}>Newest to oldest</DropdownItem>
+                <DropdownItem onClick={() => this.props.makeChrono(false)}>Oldest to newest</DropdownItem>
+            </DropdownMenu>
+            </Dropdown>
+        </div>
       );
     }
   }
