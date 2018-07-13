@@ -3,7 +3,7 @@ import './index.css';
 import 'whatwg-fetch';
 import moment from 'moment';
 import Image from './img/vp-video-editing.jpg'
-import {Button, Modal, ModalHeader, ModalBody, ModalFooter, Alert} from 'reactstrap';
+import {Button, Modal, ModalHeader, ModalBody, ModalFooter, Alert, Dropdown, DropdownToggle, DropdownMenu, DropdownItem} from 'reactstrap';
 import Pagination from "react-js-pagination";
 
 
@@ -24,6 +24,9 @@ const IMAGES_PER_PAGE = 8;
 // earliest image provided by nasa
 const EARLIEST_DAY_IMAGE = '1995-06-16';
 
+// todays date
+const DATE = moment();
+
 // api retrieval address
 const URL = 'https://api.nasa.gov/planetary/apod?api_key=EzzKNCDQOcV3fJHd4ab0NQP551lX5ImTaqkZ037e&hd=true&date=';
 
@@ -33,17 +36,16 @@ class App extends Component {
 
         this.state = {
             page: 1, // current page
-
+            picturesNewToOld: true,
             selectedCard: undefined, // selected picture (selected by click or query)
             json: [], // array of picture objects
-            date: moment(), // current date
             totalPictures: moment().diff(EARLIEST_DAY_IMAGE, "days")
         };
 
     }
 
     componentDidMount() {
-        let currentDate = moment(this.state.date);
+        let currentDate = moment(DATE);
         let dates = [];
 
         // create an array of dates from current date to IMAGES_PER_PAGE days ago
@@ -67,6 +69,11 @@ class App extends Component {
 
     }
 
+    // newest to oldest
+    makeChrono(newToOld) {
+        this.setState({picturesNewToOld: newToOld, page: 1});
+    }
+
     cardSelection(selectedCard) {
         this.setState({selectedCard: selectedCard});
     }
@@ -76,22 +83,33 @@ class App extends Component {
     }
 
     handlePageChange(number) {
-        let currentDate = this.state.date.clone().subtract(IMAGES_PER_PAGE * (number - 1), 'days');
-        console.log(currentDate.year() + "-" + (currentDate.month() + 1) + "-" + currentDate.date());
-        let updatingJSON = []; // the array to be processed and ocnverted to arra
+        let currentDate = "";
+        if (this.state.picturesNewToOld) {
+            currentDate = DATE.subtract(IMAGES_PER_PAGE * (number - 1), 'days');
+        } else {
+            currentDate = DATE.add(IMAGES_PER_PAGE * (number - 1), 'days');
+        }
+        
+        let updatingJSON = []; // the array to be processed and ocnverted to array
 
         // Adding all the dates into the updating JSON array.
         while (updatingJSON.length < IMAGES_PER_PAGE && !currentDate.isBefore(EARLIEST_DAY_IMAGE)) {
             updatingJSON.push(currentDate.year() + "-" + (currentDate.month() + 1) + "-" + currentDate.date());
-            currentDate.subtract(1, 'days');
+            if (this.state.picturesNewToOld) {
+                currentDate.subtract(1, 'days');
+            } else {
+                currentDate.add(1, 'days');
+            }
+            
         }
+
         // Fetching data
         let promiseArr = updatingJSON.map((date) => {
             return fetch(URL + date).then((response) => {
-                console.log(response);
-                return response
-            })
+                return response;
+            });
         });
+
         // Waiting for all the data to fetch
         Promise.all(promiseArr).then((data) => {
             // Filter those responses that doesn't work. Some of the dates won't have pictures.
@@ -115,7 +133,8 @@ class App extends Component {
         }
         return (
             <div>
-                <SearchBar selectedCallback={(card) => this.cardSelection(card)}/>
+                <SearchBar selectedCallback={(card) => this.cardSelection(card)} 
+                            makeChrono={(bool) => this.makeChrono(bool)}/>
                 {error}
                 <CardList cards={this.state.json} selectedCallback={(card) => this.cardSelection(card)}/>
                 <Pagination
@@ -146,7 +165,8 @@ class App extends Component {
 export default App;
 
 // user must type a valid date in the form YYYY-MM-DD
-// props: selectedCallback()- performs selection (pops up in a modal)
+// props: selectedCallback()- performs selection (pops up in a modal), 
+// makeChrono & makeReverseChrono - togglers for sort selector
 class SearchBar extends Component {
 
     constructor(props) {
@@ -188,9 +208,39 @@ class SearchBar extends Component {
                    className="form-control"
                    onChange={(event) => this.handleChange(event)}/>
             <Button color="light" onClick={(event) => this.handleQuery(event)}>Search!</Button>
+            <Sorter color="light" makeChrono={this.props.makeChrono} />
         </form>;
     }
 }
+
+// props: makeChrono - function that toggle order of display
+class Sorter extends Component {
+    constructor(props) {
+      super(props);
+  
+      this.state = {
+        dropdownOpen: false
+      };
+    }
+
+    toggle() {
+        this.setState({dropdownOpen: !this.state.dropdownOpen});
+    }
+  
+    render() {
+      return (
+        <Dropdown isOpen={this.state.dropdownOpen} toggle={() => this.toggle()}>
+          <DropdownToggle caret>
+            Select Order
+          </DropdownToggle>
+          <DropdownMenu>
+            <DropdownItem onClick={() => this.props.makeChrono(true)}>Newest to oldest</DropdownItem>
+            <DropdownItem onClick={() => this.props.makeChrono(false)}>Oldest to newest</DropdownItem>
+          </DropdownMenu>
+        </Dropdown>
+      );
+    }
+  }
 
 // props: message - error message
 class BadRequestAlert extends Component {
@@ -258,14 +308,12 @@ class CardList extends Component {
 
 // props: date - day that these asteroids are closest to earth
 class AsteroidList extends Component {
-
     constructor(props){
         super(props);
         this.state = {asteroids:[]};
     }
 
     componentDidMount() {
-        console.log("componentDidMount()");
         let asteroidURL = 'https://api.nasa.gov/neo/rest/v1/feed?api_key=EzzKNCDQOcV3fJHd4ab0NQP551lX5ImTaqkZ037e';
 
         // find selection
@@ -275,31 +323,24 @@ class AsteroidList extends Component {
         }).then(response => response.near_earth_objects[this.props.date])
             .then(objects => {this.setState({asteroids:objects})})
             .catch((err) => (alert(err.message)));
-
     }
 
     render() {
-        console.log("called render()");
-        console.log("state: ", this.state.asteroids);
-        return <div>Asteroid</div>;
-        // let ok = this.findAsteroidList(this.props.date);
-        // //console.log(ok);
-        // return false;
-        // let listOfAsteroids = ok.map((asteroid) => {
-        //   return (
-        //     <div className="col-md-3" key={asteroid.neo_reference_id}>
-        //       <p>hi</p>
-        //     </div>);
-        //   });
-
-        // return (
-        //   <div className="container">
-        //     <p>There are {this.props.list.length} asteroids that got closest to Earth on {this.props.date}.</p>
-        //     <div className="row">
-        //       {listOfAsteroids}
-        //     </div>
-        //   </div>
-        // );
+        let listOfAsteroids = this.state.asteroids.map((asteroid) => {
+            return (
+              <div className="col-md-3" key={asteroid.neo_reference_id}>
+                <p>diameter: {asteroid.estimated_diameter.meters.estimated_diameter_max}</p>
+                <p>This asteroid is {asteroid.is_potentially_hazardous ? "" : "not"} potentially dangerous!</p>
+              </div>);
+            });
+        return (
+          <div className="container">
+            <p>There are {this.state.asteroids.length} asteroids that got closest to Earth on {this.props.date}.</p>
+            <div className="row">
+                {listOfAsteroids}
+            </div>
+          </div>
+        );
     }
 }
 
@@ -325,7 +366,6 @@ class PopUp extends Component {
           itemOfInterest = <img src={this.props.card.url} alt={this.props.card.title} aria-labelledby={this.props.card.title}/>;
         }
 
-        console.log("called me");
         // else create the modal
         return (
             <div>{
