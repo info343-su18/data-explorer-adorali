@@ -50,13 +50,14 @@ small {
 @media (min-width: 768px) {
   .navlinks {
     font-size: 2rem;
+    margin: 15px !important; 
   }
   
 }
 
 .navlinks {
   color: white;
-  margin: 15px;
+  margin: 5px;
 }
 
 .activelink {
