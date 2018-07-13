@@ -72,6 +72,7 @@ class App extends Component {
     // newest to oldest
     makeChrono(newToOld) {
         this.setState({picturesNewToOld: newToOld, page: 1});
+        //this.handlePageChange();
     }
 
     cardSelection(selectedCard) {
@@ -87,7 +88,7 @@ class App extends Component {
         if (this.state.picturesNewToOld) {
             currentDate = DATE.subtract(IMAGES_PER_PAGE * (number - 1), 'days');
         } else {
-            currentDate = DATE.add(IMAGES_PER_PAGE * (number - 1), 'days');
+            currentDate = moment(EARLIEST_DAY_IMAGE).add(IMAGES_PER_PAGE * (number - 1), 'days');
         }
         
         let updatingJSON = []; // the array to be processed and ocnverted to array
@@ -147,7 +148,7 @@ class App extends Component {
                     prevPageText={"<"}
                     firstPageText={"<<"}
                     itemsCountPerPage={1}
-                    totalItemsCount={Math.ceil(this.state.totalPictures / 8)}
+                    totalItemsCount={Math.ceil(this.state.totalPictures / IMAGES_PER_PAGE)}
                     pageRangeDisplayed={6}
                     onChange={(number) => {
                         this.handlePageChange(number)
@@ -307,10 +308,10 @@ class CardList extends Component {
 }
 
 // props: date - day that these asteroids are closest to earth
-class AsteroidList extends Component {
+class Asteroid extends Component {
     constructor(props){
         super(props);
-        this.state = {asteroids:[]};
+        this.state = {count: 0};
     }
 
     componentDidMount() {
@@ -320,25 +321,15 @@ class AsteroidList extends Component {
         let promise = fetch(asteroidURL + "&start_date=" + this.props.date + "&end_date=" + this.props.date);
          promise.then((response) => {
             return response.json();
-        }).then(response => response.near_earth_objects[this.props.date])
-            .then(objects => {this.setState({asteroids:objects})})
+        }).then(response => {this.setState({count: response.element_count})})
+            //.then(objects => )})
             .catch((err) => (alert(err.message)));
     }
 
     render() {
-        let listOfAsteroids = this.state.asteroids.map((asteroid) => {
-            return (
-              <div className="col-md-3" key={asteroid.neo_reference_id}>
-                <p>diameter: {asteroid.estimated_diameter.meters.estimated_diameter_max}</p>
-                <p>This asteroid is {asteroid.is_potentially_hazardous ? "" : "not"} potentially dangerous!</p>
-              </div>);
-            });
         return (
-          <div className="container">
-            <p>There are {this.state.asteroids.length} asteroids that got closest to Earth on {this.props.date}.</p>
-            <div className="row">
-                {listOfAsteroids}
-            </div>
+          <div aria-labelledby={"Asteroid data"}>
+            <p>Fun fact: There are {this.state.count} asteroids that got closest to Earth on {this.props.date}.</p>
           </div>
         );
     }
@@ -385,7 +376,7 @@ class PopUp extends Component {
                         </figure>
                         <p>{this.props.card.explanation}</p>
 
-                        <AsteroidList date={this.props.card.date}/>
+                        <Asteroid date={this.props.card.date}/>
                     </ModalBody>
                     <ModalFooter>
                         <Button color="secondary" onClick={() => {
