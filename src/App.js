@@ -7,7 +7,7 @@ import {Button, Modal, ModalHeader, ModalBody, ModalFooter, Alert, Dropdown, Dro
 import Pagination from "react-js-pagination";
 
 
-//Sample JSON
+//Sample JSON:
 // {
 //     "copyright": "Jean-Luc DauvergneCiel et Espace",
 //     "date": "2018-07-10",
@@ -18,17 +18,17 @@ import Pagination from "react-js-pagination";
 //     "url": "https://www.youtube.com/embed/8i8-IuYoz24?rel=0"
 // }
 
-// images displayed per page
+// Images displayed per page
 const IMAGES_PER_PAGE = 8;
 
-// earliest image provided by nasa
+// Earliest image provided by nasa
 const EARLIEST_DAY_IMAGE = '1995-06-16';
 
-// todays date
+// Today's date
 const DATE = moment();
 
 // api retrieval address
-const URL = 'https://api.nasa.gov/planetary/apod?api_key=EzzKNCDQOcV3fJHd4ab0NQP551lX5ImTaqkZ037e&hd=true&date=';
+const URL = 'https://api.nasa.gov/planetary/apod?api_key=osdVyi5XiDFoWNxvHZHTCevykMscwRdCYdux3CyF&hd=true&date=';
 
 class App extends Component {
     constructor(props) {
@@ -44,6 +44,10 @@ class App extends Component {
 
     }
 
+    // LIFE CYCLE METHODS ------------------
+
+
+    // Fetching data from the API.
     componentDidMount() {
         let currentDate = moment(DATE);
         let dates = [];
@@ -53,7 +57,6 @@ class App extends Component {
             dates.push(currentDate.year() + "-" + (currentDate.month() + 1) + "-" + currentDate.date());
             currentDate.subtract(1, 'days');
         }
-
 
         // set the pictures in our state to be the json object for each date
         Promise.all(dates.map((date) => {
@@ -68,32 +71,44 @@ class App extends Component {
         })
 
     }
-
-    // newest to oldest
-    makeChrono(newToOld) {
-        this.setState({picturesNewToOld: newToOld, page: 1});
+    /* This is called in order to scroll up at the top of the page for every time the App renders */
+    componentDidUpdate() {
+        window.scrollTo(0,0);
     }
 
+
+
+    // CALL BACK FUNCTIONS ------------------
+
+    // Newest to oldest call back. Variable, bool: true for new to old, false for old to new,
+    makeChrono(newToOld) {
+        this.setState({picturesNewToOld: newToOld, page: 1}, () => {this.handlePageChange(1)});
+
+    }
+
+    // To select a card and bring it up to APP
     cardSelection(selectedCard) {
         this.setState({selectedCard: selectedCard});
     }
 
+    // Toggle card selection. The reason is to show the pop up.
     toggleCardSelection() {
         this.setState({selectedCard: undefined});
     }
 
+    // Handle the page. Takes in the page number.
     handlePageChange(number) {
         let currentDate = "";
         if (this.state.picturesNewToOld) {
-            currentDate = DATE.subtract(IMAGES_PER_PAGE * (number - 1), 'days');
+            currentDate = DATE.clone().subtract(IMAGES_PER_PAGE * (number - 1), 'days');
         } else {
-            currentDate = DATE.add(IMAGES_PER_PAGE * (number - 1), 'days');
+            currentDate = moment(EARLIEST_DAY_IMAGE).add(IMAGES_PER_PAGE * (number - 1), 'days');
         }
         
         let updatingJSON = []; // the array to be processed and ocnverted to array
 
         // Adding all the dates into the updating JSON array.
-        while (updatingJSON.length < IMAGES_PER_PAGE && !currentDate.isBefore(EARLIEST_DAY_IMAGE)) {
+        while (updatingJSON.length < IMAGES_PER_PAGE && !currentDate.isBefore(EARLIEST_DAY_IMAGE) && !currentDate.isAfter(DATE)) {
             updatingJSON.push(currentDate.year() + "-" + (currentDate.month() + 1) + "-" + currentDate.date());
             if (this.state.picturesNewToOld) {
                 currentDate.subtract(1, 'days');
@@ -125,6 +140,7 @@ class App extends Component {
             )
         });
     }
+
 
     render() {
         let error = "";
