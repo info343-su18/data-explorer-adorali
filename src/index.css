@@ -1,0 +1,72 @@
+*{
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Space Mono', monospace !important; 
+  background: url('img/space.jpg') repeat;
+}
+
+.row {
+  align-items: center;
+}
+
+/* card styling */
+
+.card {
+  margin: 10px;
+}
+
+figcaption {
+  margin: 5px;
+}
+
+img {
+  width: 100%;
+  height: auto;
+  border-radius: 4px;
+}
+
+.card img:focus, .card img:hover {
+  filter: brightness(75%);
+}
+
+.card img {
+  cursor: pointer;
+}
+
+/* footer styling */
+small {
+  color: aliceblue;
+}
+
+/* modal styling */
+.modal-lg {
+  max-width: 80% !important;
+}
+
+/* pagination styling */
+
+@media (min-width: 768px) {
+  .navlinks {
+    font-size: 2rem;
+    margin: 15px !important; 
+  }
+  
+}
+
+.navlinks {
+  color: white;
+  margin: 5px;
+}
+
+.activelink {
+  background-color: rgba(234, 236, 236, 0.5);
+  box-shadow: inset 0px 0px 15px 1px black; 
+  box-shadow: 0px 0px 15px 1px white; 
+  border-radius: 10px;
+}
+
+.navlinks:focus, .navlinks:hover {
+  color: white;
+}

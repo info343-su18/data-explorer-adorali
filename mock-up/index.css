@@ -1,0 +1,53 @@
+*{
+    box-sizing: border-box;
+}
+body {
+    background: url('./space.jpg') repeat;
+}
+
+/*!* btn styling *!*/
+
+.btn {
+   float: right;
+}
+
+a:focus, a:hover {
+    color: aliceblue;
+    text-decoration: none;
+}
+
+/* spread styling */
+
+.spread {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+}
+
+/*!* card styling *!*/
+
+.card {
+    margin: 2px;
+    flex-basis: 24%;
+}
+
+img {
+    border-radius: 2px;
+    width: 100%;
+    height: auto;
+}
+
+.card img {
+    cursor: pointer;
+}
+
+/* footer styling */
+small {
+    color: aliceblue;
+}
+
+
+/* modal styling */
+.modal-lg {
+    max-width: 90% !important;
+}
