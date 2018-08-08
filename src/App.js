@@ -289,8 +289,16 @@ class Card extends Component {
       if (this.props.card.media_type === 'video') {
         display = Image;
       } else if (this.props.card.media_type === 'image') {
-        display = this.props.card.url;
+          if (this.props.card.url.includes("http://")) {
+            let breakpoint = this.props.card.url.indexOf("http://");
+            let newURL = this.props.card.url.substring(breakpoint);
+            display = newURL;
+          } else {
+            display = this.props.card.url;
+          }
       }
+
+      console.log(this.props.card);
 
       return (
         <div className="card" onClick={() => {
@@ -368,7 +376,15 @@ class PopUp extends Component {
             src={this.props.card.url} title={this.props.card.title} alt={this.props.card.title} aria-labelledby={this.props.card.title}>
           </iframe>;
         } else if (this.props.card.media_type === 'image') {
-          itemOfInterest = <img src={this.props.card.url} alt={this.props.card.title} aria-labelledby={this.props.card.title}/>;
+            let display = undefined;
+            if (this.props.card.url.includes("http://")) {
+                let breakpoint = this.props.card.url.indexOf("http://");
+                let newURL = this.props.card.url.substring(breakpoint);
+                display = newURL;
+            } else {
+                display = this.props.card.url;
+            }
+          itemOfInterest = <img src={display} alt={this.props.card.title} aria-labelledby={this.props.card.title}/>;
         }
 
         // else create the modal
